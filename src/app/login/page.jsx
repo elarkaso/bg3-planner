@@ -102,7 +102,7 @@ export default function LoginPage() {
               Email
               <input
                 className="bg3-input"
-                placeholder="např. družina@faerun.cz"
+                placeholder="např absolutni@pichani.cz"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 autoComplete="email"
