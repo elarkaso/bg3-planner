@@ -67,7 +67,6 @@ export default function LoginPage() {
             <div>
               <h1 className="bg3-loginH1">{title}</h1>
               <div className="bg3-sub">
-                BG3 planner je jen pro vaši partu. Přihlas se, ať to není veřejné.
               </div>
             </div>
           </div>
