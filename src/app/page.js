@@ -334,9 +334,9 @@ export default function Page() {
               <label className="bg3-sub">
                 Min. free:&nbsp;
                 <select
+                  className="bg3-select"
                   value={minFree}
                   onChange={(e) => setMinFree(Number(e.target.value))}
-                  style={select}
                 >
                   {Array.from({ length: Math.max(1, data.players?.length ?? 1) }, (_, i) => i + 1).map((n) => (
                     <option key={n} value={n}>
@@ -359,8 +359,7 @@ export default function Page() {
               </div>
             ) : (
               slots.map((s) => (
-                <div key={s.key} className="bg3-slot"
-                  style={perfect ? { borderColor: "rgba(214,178,94,.55)" } : undefined}>
+                <div key={s.key} className="bg3-slot">
                   <div className="bg3-slotTop">
                     <b>{s.label}</b>
                     <span style={{ color: "#6b7280", fontSize: 12 }}>{s.ratio} free</span>
