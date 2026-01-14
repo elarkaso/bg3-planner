@@ -214,43 +214,50 @@ export default function Page() {
   }, [data]);
 
   // UI
-  return (
-    <main className="bg3-shell">
-      <div className="bg3-grid">
-        {/* LEFT */}
-        <section className="bg3-card">
-          <div className="bg3-cardHeader">
-            <div className="bg3-titleRow">
-              <h1 className="bg3-h1">BG3 dostupnost</h1>
-              <span className="bg3-sub">
-                Room: <b>{roomSlug}</b> • Stav: <b>{status}</b>
-              </span>
-            </div>
+return (
+  <main className="bg3-shell">
+    <div className="bg3-grid">
 
-            <div className="bg3-controls">
-              <label className="bg3-sub">
-                Aktivní hráč:&nbsp;
-                <select
-                  className="bg3-select"
-                  value={activePlayerId ?? ""}
-                  onChange={(e) => setActivePlayerId(e.target.value)}
-                >
-                  {(data.players ?? []).map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
+      {/* LEVÁ KARTA */}
+      <section className="bg3-card">
+        {/* HEADER (tady se ztrácíš) */}
+        <div className="bg3-cardHeader">
+          <div className="bg3-titleRow">
+            <h1 className="bg3-h1">BG3 dostupnost</h1>
+            <span className="bg3-sub">
+              Room: <b>{roomSlug}</b> • Stav: <b>{status}</b>
+            </span>
+          </div>
 
-              <button className="bg3-btn bg3-btnPrimary" onClick={addPlayer}>
-                + Přidat hráče
-              </button>
-              <button className="bg3-btn bg3-btnDanger" onClick={removeActivePlayer} disabled={!activePlayerId}>
-                Odebrat hráče
-              </button>
+          <div className="bg3-controls">
+            <label className="bg3-sub">
+              Aktivní hráč:&nbsp;
+              <select
+                className="bg3-select"
+                value={activePlayerId ?? ""}
+                onChange={(e) => setActivePlayerId(e.target.value)}
+              >
+                {(data.players ?? []).map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
+                ))}
+              </select>
+            </label>
 
-          <span className="bg3-pill">
+            <button className="bg3-btn bg3-btnPrimary" onClick={addPlayer}>
+              + Přidat hráče
+            </button>
+
+            <button
+              className="bg3-btn bg3-btnDanger"
+              onClick={removeActivePlayer}
+              disabled={!activePlayerId}
+            >
+              Odebrat hráče
+            </button>
+
+            <span className="bg3-pill">
               Tip: klik = stav • ✎ = důvod
             </span>
           </div>
@@ -259,141 +266,133 @@ export default function Page() {
             <span className="bg3-pill"><span className="bg3-dot free"></span>free</span>
             <span className="bg3-pill"><span className="bg3-dot maybe"></span>možná</span>
             <span className="bg3-pill"><span className="bg3-dot busy"></span>busy</span>
-            <span className="bg3-pill">"—" = bere se jako busy</span>
+            <span className="bg3-pill">— = bere se jako busy</span>
           </div>
         </div>
 
-          <div className="bg3-tableWrap">
-            <table className="bg3-table">
-              <thead>
-                <tr>
-                  <th className="bg3-th bg3-time">Čas</th>
-                  {DAYS.map((d) => (
-                    <th key={d} className="bg3-th">
-                      {d}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
+        {/* TABULKA */}
+        <div className="bg3-tableWrap">
+          <table className="bg3-table">
+            <thead>
+              <tr>
+                <th className="bg3-th bg3-time">Čas</th>
+                {DAYS.map((d) => (
+                  <th key={d} className="bg3-th">{d}</th>
+                ))}
+              </tr>
+            </thead>
 
-              <tbody>
-                {HOURS.map((hour, h) => (
-                  <tr key={hour}>
-                    <td className="bg3-td bg3-time">
-                      {pad2(hour)}:00
-                    </td>
+            <tbody>
+              {HOURS.map((hour, h) => (
+                <tr key={hour}>
+                  <td className="bg3-td bg3-time">{pad2(hour)}:00</td>
 
-                    {DAYS.map((_, d) => {
-                      const cell = getCell(d, h);
-                      const state = cell.state ?? "empty";
-                      const note = (cell.note ?? "").trim();
+                  {DAYS.map((_, d) => {
+                    const cell = getCell(d, h);
+                    const state = cell.state ?? "empty";
+                    const note = (cell.note ?? "").trim();
 
-                      return (
-                        <td key={`${d}-${h}`} className={[
+                    return (
+                      <td
+                        key={`${d}-${h}`}
+                        className={[
                           "bg3-td",
                           `bg3-state-${state}`,
                           note ? "bg3-hasNote" : ""
-                        ].join(" ")}>
-                          <div className="bg3-cell">
-                            <button onClick={() => cycleCell(d, h)} className="bg3-cellMain">
-                              {STATE_LABEL[state]}
-                            </button>
+                        ].join(" ")}
+                      >
+                        <div className="bg3-cell">
+                          <button className="bg3-cellMain" onClick={() => cycleCell(d, h)}>
+                            {STATE_LABEL[state]}
+                          </button>
+                          <button
+                            className="bg3-noteBtn"
+                            onClick={() => editNote(d, h)}
+                            title={note || "Přidat důvod"}
+                          >
+                            ✎
+                          </button>
+                        </div>
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
 
-                            <button
-                              className="bg3-noteBtn"
-                              onClick={() => editNote(d, h)}
-                              title={note ? note : "Přidat poznámku"}
-                            >
-                              ✎
-                            </button>
-                          </div>
-                        </td>
-                      );
-                    })}
-                  </tr>
+      {/* PRAVÁ KARTA */}
+      <aside className="bg3-card">
+        <div className="bg3-cardHeader">
+          <div className="bg3-titleRow">
+            <h2 className="bg3-h1" style={{ fontSize: 14, margin: 0 }}>Společně volno</h2>
+            <span className="bg3-sub">
+              Hráči: <b>{data.players?.length ?? 0}</b> • Všichni free: <b>{allFreeCount}</b>
+            </span>
+          </div>
+
+          <div className="bg3-controls">
+            <label className="bg3-sub">
+              Min. free:&nbsp;
+              <select
+                className="bg3-select"
+                value={minFree}
+                onChange={(e) => setMinFree(Number(e.target.value))}
+              >
+                {Array.from({ length: Math.max(1, data.players?.length ?? 1) }, (_, i) => i + 1).map((n) => (
+                  <option key={n} value={n}>{n}</option>
                 ))}
-              </tbody>
-            </table>
+              </select>
+            </label>
+
+            <button className="bg3-btn bg3-btnDanger" onClick={resetAll}>
+              Reset vše
+            </button>
           </div>
-        </section>
+        </div>
 
-        {/* RIGHT */}
-        <aside className="bg3-card">
-          <div className="bg3-cardHeader">
-            <div className="bg3-titleRow">Společně volno</div>
-            <div className="bg3-h1" style={{ fontSize: 14, margin: 0 }}>
-              <span>
-                Hráči: <b className="bg3-sub">{data.players?.length ?? 0}</b>
-              </span>
-              <span>
-                Úseků všichni free: <b style={{ color: "#111827" }}>{allFreeCount}</b>
-              </span>
-            </div>
-
-            <div className="bg3-controls">
-              <label className="bg3-sub">
-                Min. free:&nbsp;
-                <select
-                  className="bg3-select"
-                  value={minFree}
-                  onChange={(e) => setMinFree(Number(e.target.value))}
+        <div className="bg3-sideBody">
+          {slots.length === 0 ? (
+            <div className="bg3-sub">Nic nesplňuje podmínku. Zkus snížit „Min. free“.</div>
+          ) : (
+            slots.map((s) => {
+              const perfect = s.free.length === (data.players?.length ?? 0);
+              return (
+                <div
+                  key={s.key}
+                  className="bg3-slot"
+                  style={perfect ? { borderColor: "rgba(214,178,94,.55)" } : undefined}
                 >
-                  {Array.from({ length: Math.max(1, data.players?.length ?? 1) }, (_, i) => i + 1).map((n) => (
-                    <option key={n} value={n}>
-                      {n}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <button onClick={resetAll} className="bg3-btn bg3-btnDanger">
-                Reset vše
-              </button>
-            </div>
-          </div>
-
-          <div className="bg3-sideBody">
-            {slots.length === 0 ? (
-              <div className="bg3-sub">
-                Nic nesplňuje podmínku. Zkus snížit „Min. free“.
-              </div>
-            ) : (
-              slots.map((s) => (
-                <div key={s.key} className="bg3-slot">
                   <div className="bg3-slotTop">
                     <b>{s.label}</b>
-                    <span style={{ color: "#6b7280", fontSize: 12 }}>{s.ratio} free</span>
+                    <small>{s.ratio} free</small>
                   </div>
 
                   <div style={{ marginTop: 8, fontSize: 13 }}>
-                    <div>
-                      <span className="bg3-dot free">Free</span>{" "}
-                      {s.free.join(", ") || "—"}
-                    </div>
-                    <div style={{ marginTop: 6 }}>
-                      <span className="bg3-dot maybe">Možná</span>{" "}
-                      {s.maybe.join(", ") || "—"}
-                    </div>
-                    <div style={{ marginTop: 6 }}>
-                      <span className="bg3-dot busy">Busy</span>{" "}
-                      {s.busy.join(", ") || "—"}
-                    </div>
+                    <div><span className="bg3-dot free"></span><b>Free:</b> {s.free.join(", ") || "—"}</div>
+                    <div style={{ marginTop: 6 }}><span className="bg3-dot maybe"></span><b>Možná:</b> {s.maybe.join(", ") || "—"}</div>
+                    <div style={{ marginTop: 6 }}><span className="bg3-dot busy"></span><b>Busy:</b> {s.busy.join(", ") || "—"}</div>
                   </div>
                 </div>
-              ))
-            )}
-          </div>
-        </aside>
-      </div>
+              );
+            })
+          )}
+        </div>
+      </aside>
 
-      <div style={{ marginTop: 6, color: "#6b7280", fontSize: 13 }}>
+    </div>
+
+    <div style={{ marginTop: 6, color: "#6b7280", fontSize: 13 }}>
         HOW TO: <br />
         1) Stiskni přidat hráče a napiš své jméno (ostatní hráči to udělají taky).<br />
         2) Vyber se v seznamu jako aktivního hráče.<br />
         3) Klikáním na buňky nastav svůj stav dostupnosti (free/možná/busy).<br />
       </div>
-    </main>
-  );
+      
+  </main>
+);
 }
 
 // ====== styles (jednoduché inline, ať se s tím nemusíš prát) ======
