@@ -276,3 +276,143 @@ a{ color: var(--gold2); }
   align-items:baseline;
 }
 .bg3-slotTop small{ color: var(--text); }
+
+/* ===== BG3 Login ===== */
+.bg3-loginWrap{
+  min-height: calc(100vh - 0px);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding: 28px 14px;
+}
+
+.bg3-loginCard{
+  width: min(520px, 100%);
+  border-radius: 18px;
+  border: 1px solid rgba(214,178,94,.25);
+  background:
+    radial-gradient(1200px 600px at 20% -10%, rgba(214,178,94,.18), transparent 60%),
+    radial-gradient(900px 500px at 110% 10%, rgba(161,105,255,.12), transparent 55%),
+    rgba(10, 10, 12, .72);
+  box-shadow:
+    0 18px 55px rgba(0,0,0,.45),
+    inset 0 1px 0 rgba(255,255,255,.06);
+  padding: 18px;
+  backdrop-filter: blur(10px);
+}
+
+.bg3-loginTop{
+  display:flex;
+  gap: 12px;
+  align-items:center;
+  padding: 8px 6px 14px;
+}
+
+.bg3-loginSigil{
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background: rgba(214,178,94,.14);
+  border: 1px solid rgba(214,178,94,.28);
+  box-shadow: inset 0 0 18px rgba(214,178,94,.12);
+  font-size: 18px;
+}
+
+.bg3-loginH1{
+  margin: 0;
+  font-size: 18px;
+  letter-spacing: .2px;
+  color: rgba(255,255,255,.92);
+}
+
+.bg3-loginTabs{
+  display:flex;
+  gap: 8px;
+  padding: 8px 6px 14px;
+}
+
+.bg3-tab{
+  flex: 1;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.04);
+  color: rgba(255,255,255,.78);
+  cursor: pointer;
+}
+
+.bg3-tab.isActive{
+  border-color: rgba(214,178,94,.35);
+  background: rgba(214,178,94,.10);
+  color: rgba(255,255,255,.92);
+  box-shadow: inset 0 0 18px rgba(214,178,94,.08);
+}
+
+.bg3-form{
+  display:grid;
+  gap: 12px;
+  padding: 6px;
+}
+
+.bg3-label{
+  display:grid;
+  gap: 6px;
+  font-size: 12px;
+  color: rgba(255,255,255,.72);
+}
+
+.bg3-input{
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(0,0,0,.25);
+  color: rgba(255,255,255,.92);
+  outline: none;
+}
+
+.bg3-input:focus{
+  border-color: rgba(214,178,94,.45);
+  box-shadow: 0 0 0 3px rgba(214,178,94,.12);
+}
+
+.bg3-alert{
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 13px;
+  line-height: 1.25rem;
+  border: 1px solid rgba(255,255,255,.10);
+}
+
+.bg3-alert.isError{
+  background: rgba(239,68,68,.10);
+  border-color: rgba(239,68,68,.25);
+  color: rgba(255,255,255,.9);
+}
+
+.bg3-alert.isInfo{
+  background: rgba(59,130,246,.10);
+  border-color: rgba(59,130,246,.25);
+  color: rgba(255,255,255,.9);
+}
+
+.bg3-loginBtn{
+  width: 100%;
+  justify-content: center;
+  padding: 10px 14px;
+}
+
+.bg3-loginHint{
+  margin-top: 6px;
+  font-size: 12px;
+  color: rgba(255,255,255,.55);
+}
+
+.bg3-loginFoot{
+  margin-top: 12px;
+  text-align: center;
+  opacity: .85;
+}
