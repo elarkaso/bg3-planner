@@ -133,13 +133,12 @@ export default function LoginPage() {
             </button>
 
             <div className="bg3-loginHint">
-              Tip: pokud jste jen parta kamarádů, můžete klidně používat jeden společný účet.
             </div>
           </form>
         </div>
 
         <div className="bg3-loginFoot">
-          <span className="bg3-sub">Baldur’s Gate vibe ✨ • Vercel • Supabase</span>
+          <span className="bg3-sub"></span>
         </div>
       </div>
     </main>
