@@ -14,10 +14,7 @@ export default function Page() {
       if (!session) router.push("/login");
     })();
   }, [router]);
-
-  // ... zbytek tvého kódu
 }
-
 
 const DAYS = ["Po", "Út", "St", "Čt", "Pá", "So", "Ne"];
 const HOURS = Array.from({ length: 16 }, (_, i) => i + 8); // 08:00–23:00
