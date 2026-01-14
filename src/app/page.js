@@ -184,38 +184,76 @@ export default function Page() {
     persist(next);
   }
 
-  // společné volno (minFree)
-  const slots = useMemo(() => {
+    // společné volno (minFree)
+    const blocks = useMemo(() => {
     const players = data.players ?? [];
-    const out = [];
+    const blocksOut = [];
 
+    // pomocné: free jména pro konkrétní (d,h)
+    function freeNamesAt(d, h) {
+      const free = [];
+      for (const p of players) {
+        const cell = data.availability?.[p.id]?.[d]?.[h] ?? { state: "empty" };
+        if (cell.state === "free") free.push(p.name);
+      }
+      return free;
+    }
+
+    // průchod po dnech
     for (let d = 0; d < DAYS.length; d++) {
-      for (let h = 0; h < HOURS.length; h++) {
-        const free = [];
-        const maybe = [];
-        const busy = [];
+      let h = 0;
 
-        for (const p of players) {
-          const cell = data.availability?.[p.id]?.[d]?.[h] ?? { state: "empty" };
-          if (cell.state === "free") free.push(p.name);
-          else if (cell.state === "maybe") maybe.push(p.name);
-          else busy.push(p.name);
+      while (h < HOURS.length) {
+        const free0 = freeNamesAt(d, h);
+
+        // podmínka: v této hodině je splněno minFree
+        if (free0.length < minFree) {
+          h++;
+          continue;
         }
 
-        if (free.length >= minFree) {
-          out.push({
-            key: `${d}-${h}`,
-            label: `${DAYS[d]} ${pad2(HOURS[h])}:00–${pad2(HOURS[h] + 1)}:00`,
-            free,
-            maybe,
-            busy,
-            ratio: `${free.length}/${players.length}`,
-          });
+        // start bloku
+        const startH = h;
+        let endH = h + 1;
+
+        // průnik hráčů free po celý blok
+        let intersection = new Set(free0);
+
+        // extend bloku, dokud navazuje a pořád splňuje minFree
+        while (endH < HOURS.length) {
+          const freeNext = freeNamesAt(d, endH);
+
+          if (freeNext.length < minFree) break;
+
+          // intersect
+          const nextSet = new Set(freeNext);
+          intersection = new Set([...intersection].filter((x) => nextSet.has(x)));
+
+          endH++;
         }
+
+        // převeď průnik do pole
+        const freeAllBlock = [...intersection];
+
+        blocksOut.push({
+          key: `${d}-${startH}-${endH}`,
+          day: DAYS[d],
+          d,
+          start: HOURS[startH],
+          end: HOURS[endH - 1] + 1, // konec je +1 hodina
+          freeAllBlock,
+          // pro info (kolik je „po celý blok“)
+          freeAllCount: freeAllBlock.length,
+        });
+
+        // posuň se za blok
+        h = endH;
       }
     }
-    return out;
+
+    return blocksOut;
   }, [data, minFree]);
+
 
   const allFreeCount = useMemo(() => {
     const players = data.players ?? [];
@@ -378,30 +416,34 @@ return (
         </div>
 
         <div className="bg3-sideBody">
-          {slots.length === 0 ? (
-            <div className="bg3-sub">Nic nesplňuje podmínku. Zkus snížit „Min. free“.</div>
-          ) : (
-            slots.map((s) => {
-              const perfect = s.free.length === (data.players?.length ?? 0);
-              return (
-                <div
-                  key={s.key}
-                  className="bg3-slot"
-                >
-                  <div className="bg3-slotTop">
-                    <b>{s.label}</b>
-                    <small>{s.ratio} free</small>
-                  </div>
+          {blocks.length === 0 ? (
+          <div className="bg3-sub">Nic nesplňuje podmínku. Zkus snížit „Min. free“.</div>
+        ) : (
+          blocks.map((b) => {
+            const timeLabel = `${b.day} ${pad2(b.start)}:00–${pad2(b.end)}:00`;
+            const perfect = b.freeAllCount === (data.players?.length ?? 0);
 
-                  <div style={{ marginTop: 8, fontSize: 13 }}>
-                    <div><span className="bg3-dot free"></span><b>Free:</b> {s.free.join(", ") || "—"}</div>
-                    <div style={{ marginTop: 6 }}><span className="bg3-dot maybe"></span><b>Možná:</b> {s.maybe.join(", ") || "—"}</div>
-                    <div style={{ marginTop: 6 }}><span className="bg3-dot busy"></span><b>Busy:</b> {s.busy.join(", ") || "—"}</div>
+            return (
+              <div
+                key={b.key}
+                className="bg3-slot"
+                style={perfect ? { borderColor: "rgba(214,178,94,.55)" } : undefined}
+              >
+                <div className="bg3-slotTop">
+                  <b>{timeLabel}</b>
+                  <small>{b.freeAllCount}/{data.players?.length ?? 0} free (celý blok)</small>
+                </div>
+
+                <div style={{ marginTop: 8, fontSize: 13 }}>
+                  <div>
+                    <span className="bg3-dot free"></span>
+                    <b>Mohou:</b> {b.freeAllBlock.join(", ") || "—"}
                   </div>
                 </div>
-              );
-            })
-          )}
+              </div>
+            );
+          })
+        )}
         </div>
       </aside>
 
