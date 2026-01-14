@@ -215,25 +215,25 @@ export default function Page() {
 
   // UI
   return (
-    <main style={{ padding: 18, fontFamily: "system-ui, sans-serif" }}>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 360px", gap: 14, alignItems: "start" }}>
+    <main className="bg3-shell">
+      <div className="bg3-grid">
         {/* LEFT */}
-        <section style={card}>
-          <div style={{ padding: 14, borderBottom: "1px solid #e5e7eb" }}>
-            <div style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}>
-              <h1 style={{ margin: 0, fontSize: 18 }}>BG3 dostupnost</h1>
-              <span style={{ color: "#6b7280", fontSize: 13 }}>
+        <section className="bg3-card">
+          <div className="bg3-cardHeader">
+            <div className="bg3-titleRow">
+              <h1 className="bg3-h1">BG3 dostupnost</h1>
+              <span className="bg3-sub">
                 Room: <b>{roomSlug}</b> • Stav: <b>{status}</b>
               </span>
             </div>
 
-            <div style={{ marginTop: 10, display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-              <label style={{ fontSize: 13, color: "#374151" }}>
+            <div className="bg3-controls">
+              <label className="bg3-sub">
                 Aktivní hráč:&nbsp;
                 <select
+                  className="bg3-select"
                   value={activePlayerId ?? ""}
                   onChange={(e) => setActivePlayerId(e.target.value)}
-                  style={select}
                 >
                   {(data.players ?? []).map((p) => (
                     <option key={p.id} value={p.id}>
@@ -243,26 +243,33 @@ export default function Page() {
                 </select>
               </label>
 
-              <button onClick={addPlayer} style={btn}>
+              <button className="bg3-btn bg3-btnPrimary" onClick={addPlayer}>
                 + Přidat hráče
               </button>
-              <button onClick={removeActivePlayer} style={btnDanger} disabled={!activePlayerId}>
+              <button className="bg3-btn bg3-btnDanger" onClick={removeActivePlayer} disabled={!activePlayerId}>
                 Odebrat hráče
               </button>
 
-              <span style={{ color: "#6b7280", fontSize: 13 }}>
-                Tip: klik = změna stavu • poznámka = tlačítko „✎“
-              </span>
-            </div>
+          <span className="bg3-pill">
+              Tip: klik = stav • ✎ = důvod
+            </span>
           </div>
 
-          <div style={{ padding: 12, overflow: "auto" }}>
-            <table style={{ borderCollapse: "collapse", width: "max-content", minWidth: "100%" }}>
+          <div className="bg3-controls">
+            <span className="bg3-pill"><span className="bg3-dot free"></span>free</span>
+            <span className="bg3-pill"><span className="bg3-dot maybe"></span>možná</span>
+            <span className="bg3-pill"><span className="bg3-dot busy"></span>busy</span>
+            <span className="bg3-pill">"—" = bere se jako busy</span>
+          </div>
+        </div>
+
+          <div className="bg3-tableWrap">
+            <table className="bg3-table">
               <thead>
                 <tr>
-                  <th style={{ ...th, position: "sticky", left: 0, zIndex: 3, background: "#fff" }}>Čas</th>
+                  <th className="bg3-th bg3-time">Čas</th>
                   {DAYS.map((d) => (
-                    <th key={d} style={th}>
+                    <th key={d} className="bg3-th">
                       {d}
                     </th>
                   ))}
@@ -272,7 +279,7 @@ export default function Page() {
               <tbody>
                 {HOURS.map((hour, h) => (
                   <tr key={hour}>
-                    <td style={{ ...tdTime, position: "sticky", left: 0, zIndex: 2, background: "#fff" }}>
+                    <td className="bg3-td bg3-time">
                       {pad2(hour)}:00
                     </td>
 
@@ -282,16 +289,20 @@ export default function Page() {
                       const note = (cell.note ?? "").trim();
 
                       return (
-                        <td key={`${d}-${h}`} style={td}>
-                          <div style={{ ...cellBox, ...stateStyle(state) }}>
-                            <button onClick={() => cycleCell(d, h)} style={cellBtn}>
+                        <td key={`${d}-${h}`} className={[
+                          "bg3-td",
+                          `bg3-state-${state}`,
+                          note ? "bg3-hasNote" : ""
+                        ].join(" ")}>
+                          <div className="bg3-cell">
+                            <button onClick={() => cycleCell(d, h)} className="bg3-cellMain">
                               {STATE_LABEL[state]}
                             </button>
 
                             <button
+                              className="bg3-noteBtn"
                               onClick={() => editNote(d, h)}
                               title={note ? note : "Přidat poznámku"}
-                              style={noteBtn}
                             >
                               ✎
                             </button>
@@ -307,20 +318,20 @@ export default function Page() {
         </section>
 
         {/* RIGHT */}
-        <aside style={card}>
-          <div style={{ padding: 14, borderBottom: "1px solid #e5e7eb" }}>
-            <div style={{ fontWeight: 700, color: "#374151" }}>Společně volno</div>
-            <div style={{ marginTop: 8, display: "flex", gap: 14, flexWrap: "wrap", color: "#6b7280", fontSize: 13 }}>
+        <aside className="bg3-card">
+          <div className="bg3-cardHeader">
+            <div className="bg3-titleRow">Společně volno</div>
+            <div className="bg3-h1" style={{ fontSize: 14, margin: 0 }}>
               <span>
-                Hráči: <b style={{ color: "#111827" }}>{data.players?.length ?? 0}</b>
+                Hráči: <b className="bg3-sub">{data.players?.length ?? 0}</b>
               </span>
               <span>
                 Úseků všichni free: <b style={{ color: "#111827" }}>{allFreeCount}</b>
               </span>
             </div>
 
-            <div style={{ marginTop: 10, display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-              <label style={{ fontSize: 13, color: "#374151" }}>
+            <div className="bg3-controls">
+              <label className="bg3-sub">
                 Min. free:&nbsp;
                 <select
                   value={minFree}
@@ -335,36 +346,37 @@ export default function Page() {
                 </select>
               </label>
 
-              <button onClick={resetAll} style={btnDanger}>
+              <button onClick={resetAll} className="bg3-btn bg3-btnDanger">
                 Reset vše
               </button>
             </div>
           </div>
 
-          <div style={{ padding: 12, maxHeight: 560, overflow: "auto" }}>
+          <div className="bg3-sideBody">
             {slots.length === 0 ? (
-              <div style={{ color: "#6b7280", fontSize: 13 }}>
+              <div className="bg3-sub">
                 Nic nesplňuje podmínku. Zkus snížit „Min. free“.
               </div>
             ) : (
               slots.map((s) => (
-                <div key={s.key} style={slotCard}>
-                  <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
+                <div key={s.key} className="bg3-slot"
+                  style={perfect ? { borderColor: "rgba(214,178,94,.55)" } : undefined}>
+                  <div className="bg3-slotTop">
                     <b>{s.label}</b>
                     <span style={{ color: "#6b7280", fontSize: 12 }}>{s.ratio} free</span>
                   </div>
 
-                  <div style={{ marginTop: 8, fontSize: 13, color: "#111827" }}>
+                  <div style={{ marginTop: 8, fontSize: 13 }}>
                     <div>
-                      <span style={{ ...pill, background: "#dcfce7", borderColor: "#86efac" }}>Free</span>{" "}
+                      <span className="bg3-dot free">Free</span>{" "}
                       {s.free.join(", ") || "—"}
                     </div>
                     <div style={{ marginTop: 6 }}>
-                      <span style={{ ...pill, background: "#fef9c3", borderColor: "#fde047" }}>Možná</span>{" "}
+                      <span className="bg3-dot maybe">Možná</span>{" "}
                       {s.maybe.join(", ") || "—"}
                     </div>
                     <div style={{ marginTop: 6 }}>
-                      <span style={{ ...pill, background: "#fee2e2", borderColor: "#fca5a5" }}>Busy</span>{" "}
+                      <span className="bg3-dot busy">Busy</span>{" "}
                       {s.busy.join(", ") || "—"}
                     </div>
                   </div>
@@ -380,7 +392,6 @@ export default function Page() {
         1) Stiskni přidat hráče a napiš své jméno (ostatní hráči to udělají taky).<br />
         2) Vyber se v seznamu jako aktivního hráče.<br />
         3) Klikáním na buňky nastav svůj stav dostupnosti (free/možná/busy).<br />
-        4) Můžeš přidat i poznámky k jednotlivým časům (tlačítko „✎“).<br />
       </div>
     </main>
   );
