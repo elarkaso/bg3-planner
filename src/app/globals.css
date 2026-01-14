@@ -64,12 +64,12 @@ a{ color: var(--gold2); }
 }
 
 .bg3-card{
-  background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+  background: linear-gradient(180deg, rgba(190, 132, 132, 0.06), rgba(231, 3, 3, 0.02));
   border: 1px solid var(--border2);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   overflow:hidden;
-  backdrop-filter: blur(8px);
+  backdrop-filter: blur(100px);
 }
 
 .bg3-cardHeader{
