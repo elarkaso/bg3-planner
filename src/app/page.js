@@ -1,7 +1,21 @@
 "use client";
 
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabaseClient";
+
 import { useEffect, useMemo, useRef, useState } from "react";
 import { loadRoom, saveRoom } from "@/lib/rooms";
+
+const router = useRouter();
+
+useEffect(() => {
+  (async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) router.push("/login");
+  })();
+}, [router]);
+
 
 const DAYS = ["Po", "Út", "St", "Čt", "Pá", "So", "Ne"];
 const HOURS = Array.from({ length: 16 }, (_, i) => i + 8); // 08:00–23:00
@@ -405,6 +419,16 @@ return (
           </div>
 
           <div className="bg3-controls">
+            <button
+              className="bg3-btn"
+              onClick={async () => {
+                await supabase.auth.signOut();
+                window.location.href = "/login";
+              }}
+            >
+              Odhlásit
+            </button>
+
             <label className="bg3-sub">
               Aktivní hráč:&nbsp;
               <select
