@@ -89,7 +89,7 @@ a{ color: var(--gold2); }
   letter-spacing:.2px;
 }
 .bg3-sub{
-  color: var(--muted);
+  color: var(--text);
   font-size: 13px;
 }
 
@@ -138,7 +138,7 @@ a{ color: var(--gold2); }
   border-radius: 999px;
   border: 1px solid rgba(255,255,255,.12);
   background: rgba(0,0,0,.18);
-  color: var(--muted);
+  color: var(--text);
   font-size: 13px;
 }
 .bg3-dot{ width:10px; height:10px; border-radius: 3px; display:inline-block; }
@@ -161,16 +161,23 @@ a{ color: var(--gold2); }
   min-width: 92px;
   position:relative;
 }
+/* HLAVIČKA DNŮ */
 .bg3-th{
   padding: 10px 8px;
   font-size: 12px;
-  color: var(--muted);
-  background: rgba(0,0,0,.22);
+  letter-spacing: .4px;
+  text-transform: uppercase;
+  color: var(--text);
+
+  background: rgba(10,10,16,.85);
+
+
   position: sticky;
   top: 0;
   z-index: 3;
   backdrop-filter: blur(6px);
 }
+
 .bg3-time{
   position: sticky;
   left: 0;
@@ -178,7 +185,7 @@ a{ color: var(--gold2); }
   min-width: 76px;
   width: 76px;
   background: rgba(10,10,16,.85);
-  color: var(--muted);
+  color: var(--text);
   font-weight: 700;
   font-size: 12px;
 }
@@ -244,4 +251,4 @@ a{ color: var(--gold2); }
   gap:10px;
   align-items:baseline;
 }
-.bg3-slotTop small{ color: var(--muted); }
+.bg3-slotTop small{ color: var(--text); }
