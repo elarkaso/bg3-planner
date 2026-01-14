@@ -223,7 +223,7 @@ return (
         {/* HEADER (tady se ztrácíš) */}
         <div className="bg3-cardHeader">
           <div className="bg3-titleRow">
-            <h1 className="bg3-h1">BG3 dostupnost</h1>
+            <h1 className="bg3-h1">Baldur's Gate Guild Schedule</h1>
             <span className="bg3-sub">
               Room: <b>{roomSlug}</b> • Stav: <b>{status}</b>
             </span>
@@ -381,15 +381,7 @@ return (
         </div>
       </aside>
 
-    </div>
-
-    <div style={{ marginTop: 6, color: "#6b7280", fontSize: 13 }}>
-        HOW TO: <br />
-        1) Stiskni přidat hráče a napiš své jméno (ostatní hráči to udělají taky).<br />
-        2) Vyber se v seznamu jako aktivního hráče.<br />
-        3) Klikáním na buňky nastav svůj stav dostupnosti (free/možná/busy).<br />
-      </div>
-      
+    </div> 
   </main>
 );
 }
