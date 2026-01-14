@@ -87,13 +87,17 @@ function deepClone(obj) {
 }
 
 export default function Page() {
+  const [userId, setUserId] = useState(null);
+
   const router = useRouter();
 
   // auth guard
   useEffect(() => {
     (async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) router.push("/login");
+        if (!session) { router.push("/login"); return; }
+          setUserId(session.user.id);
+          setAuthChecked(true);
     })();
   }, [router]);
 
@@ -154,6 +158,33 @@ export default function Page() {
         const upgraded = ensureWeeksShape(dbData);
         setData(upgraded);
 
+        const { data: { session } } = await supabase.auth.getSession();
+        const uid = session?.user?.id;
+
+        // dopln owner, pokud chybí (legacy data)
+        if (uid) {
+          const fixed = deepClone(upgraded);
+          let changed = false;
+
+          fixed.players = (fixed.players ?? []).map(p => {
+            if (!p.owner) { changed = true; return { ...p, owner: null }; }
+            return p;
+          });
+
+          // pokud žádný hráč ještě nemá owner a existuje hráč "Já", přiřaď ho aktuálnímu userovi
+          const hasAnyOwner = fixed.players.some(p => p.owner);
+          if (!hasAnyOwner && fixed.players.length > 0) {
+            fixed.players[0] = { ...fixed.players[0], owner: uid };
+            changed = true;
+          }
+
+          if (changed) {
+            setData(fixed);
+            // volitelně persist(fixed) – ale až po inicializaci, aby ses nebil s loadem
+            await saveRoom(roomSlug, fixed);
+          }
+        }
+
         const withWeeks = deepClone(upgraded);
         ensureWeek(withWeeks, thisWeekKey);
         ensureWeek(withWeeks, nextWeekKey);
@@ -189,6 +220,9 @@ export default function Page() {
   }
 
   // helpers na práci s cell
+  const activePlayer = (data.players ?? []).find(p => p.id === activePlayerId);
+  const canEditActive = !!userId && (activePlayer?.owner === userId);
+
   function ensureWeek(nextData, weekKey) {
   if (!nextData.weeks) nextData.weeks = {};
   if (!nextData.weeks[weekKey]) nextData.weeks[weekKey] = { availability: {} };
@@ -215,6 +249,7 @@ export default function Page() {
   }
 
   function cycleCell(weekKey, d, h) {
+    if (!canEditActive) return;
     const next = deepClone(data);
     ensureWeek(next, weekKey);
 
@@ -230,6 +265,7 @@ export default function Page() {
   }
 
   function editNote(weekKey, d, h) {
+    if (!canEditActive) return;
     const pid = activePlayerId;
     if (!pid) return;
 
@@ -254,7 +290,7 @@ export default function Page() {
 
     const next = deepClone(data);
     const id = uid();
-    next.players.push({ id, name: name.trim() });
+    next.players.push({ id, name: name.trim(), owner: userId });
     // přidat hráče do všech existujících týdnů
       for (const wk of Object.keys(next.weeks ?? {})) {
         if (!next.weeks[wk].availability) next.weeks[wk].availability = {};
@@ -436,7 +472,7 @@ return (
               >
                 {(data.players ?? []).map((p) => (
                   <option key={p.id} value={p.id}>
-                    {p.name}
+                    {p.name}{p.owner === userId ? " (já)" : ""}
                   </option>
                 ))}
               </select>
@@ -507,15 +543,21 @@ return (
                         ].join(" ")}
                       >
                         <div className="bg3-cell">
-                          <button className="bg3-cellMain" onClick={() => cycleCell(selectedWeekKey, d, h)}>
+                          <button
+                            className="bg3-cellMain"
+                            onClick={() => cycleCell(selectedWeekKey, d, h)}
+                            disabled={!canEditActive}
+                            title={!canEditActive ? "Nemůžeš editovat hráče, který ti nepatří" : ""}
+                          >
+
                             {STATE_LABEL[state]}
                           </button>
                           <button
                             className="bg3-noteBtn"
                             onClick={() => editNote(selectedWeekKey, d, h)}
-                            title={note || "Přidat důvod"}
+                            disabled={!canEditActive}
                           >
-                            ✎
+                        
                           </button>
                         </div>
                       </td>

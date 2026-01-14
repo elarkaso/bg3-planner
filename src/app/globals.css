@@ -224,6 +224,11 @@ a{ color: var(--gold2); }
   font-size: 12px;
   cursor:pointer;
 }
+.bg3-cellMain:disabled,
+.bg3-noteBtn:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
 .bg3-noteBtn{
   border:none;
   border-left: 1px solid rgba(255,255,255,.12);
