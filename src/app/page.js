@@ -1,20 +1,22 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
-
-import { useEffect, useMemo, useRef, useState } from "react";
 import { loadRoom, saveRoom } from "@/lib/rooms";
 
-const router = useRouter();
+export default function Page() {
+  const router = useRouter(); // ✅ TADY, uvnitř komponenty
 
-useEffect(() => {
-  (async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) router.push("/login");
-  })();
-}, [router]);
+  useEffect(() => {
+    (async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) router.push("/login");
+    })();
+  }, [router]);
+
+  // ... zbytek tvého kódu
+}
 
 
 const DAYS = ["Po", "Út", "St", "Čt", "Pá", "So", "Ne"];
