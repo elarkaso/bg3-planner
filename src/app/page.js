@@ -363,7 +363,6 @@ return (
                 <div
                   key={s.key}
                   className="bg3-slot"
-                  style={perfect ? { borderColor: "rgba(214,178,94,.55)" } : undefined}
                 >
                   <div className="bg3-slotTop">
                     <b>{s.label}</b>

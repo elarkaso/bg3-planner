@@ -27,11 +27,8 @@ html, body{ height:100%; }
 body{
   margin:0;
   color:var(--text);
-  background:
-    radial-gradient(900px 600px at 18% 10%, rgba(74,163,255,.13), transparent 60%),
-    radial-gradient(900px 700px at 80% 15%, rgba(214,178,94,.12), transparent 55%),
-    radial-gradient(900px 700px at 50% 90%, rgba(177,50,59,.11), transparent 55%),
-    linear-gradient(180deg, var(--bg1), var(--bg0));
+  background-image: url("https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3bDBvc3ZpbmlieGFuZ3Z2aXY5OTEwc3FqejRucjlsZXJvOHg0aWN6diZlcD12MV9naWZzX3NlYXJjaCZjdD1n/XYLNwDm4QxyzqbaD0t/giphy.gif");
+  background-size: cover;
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
 }
 
