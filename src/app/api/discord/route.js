@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { verifyKey } from "discord-interactions";
 import { loadRoom, saveRoom } from "@/lib/rooms";
 
+export const runtime = "nodejs";
+
 const InteractionResponseType = { PONG: 1, CHANNEL_MESSAGE_WITH_SOURCE: 4 };
 
 function json(data, status = 200) {
@@ -85,6 +87,14 @@ export async function POST(req) {
 
   const interaction = JSON.parse(rawBody);
 
+  console.log("DISCORD HIT", {
+  hasSig: !!req.headers.get("x-signature-ed25519"),
+  hasTs: !!req.headers.get("x-signature-timestamp"),
+  hasPk: !!process.env.DISCORD_PUBLIC_KEY,
+  bodyLen: rawBody.length,
+});
+
+
   // PING (Discord ověření)
   if (interaction.type === 1) {
     return json({ type: InteractionResponseType.PONG });
@@ -154,4 +164,8 @@ export async function POST(req) {
   });
 
   return immediate;
+}
+
+export async function GET() {
+  return NextResponse.json({ ok: true, where: "/api/discord" });
 }
