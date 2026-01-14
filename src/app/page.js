@@ -9,6 +9,27 @@ const HOURS = Array.from({ length: 16 }, (_, i) => i + 8); // 08:00–23:00
 const STATES = ["empty", "free", "maybe", "busy"];
 const STATE_LABEL = { empty: "—", free: "free", maybe: "možná", busy: "busy" };
 
+function formatCZ(date) {
+  return new Intl.DateTimeFormat("cs-CZ").format(date);
+}
+
+// vrátí { start: Date (Po), end: Date (Ne) } pro týden, kde je "today"
+function getWeekRangeMonSun(today = new Date()) {
+  const d = new Date(today);
+  d.setHours(0, 0, 0, 0);
+
+  // JS: 0=Ne, 1=Po, ... 6=So
+  const day = d.getDay();
+  const diffToMon = (day === 0 ? -6 : 1 - day); // když je neděle, vrať se o 6 dní
+  const monday = new Date(d);
+  monday.setDate(d.getDate() + diffToMon);
+
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+
+  return { start: monday, end: sunday };
+}
+
 function uid() {
   return Math.random().toString(16).slice(2) + Date.now().toString(16);
 }
@@ -42,6 +63,9 @@ export default function Page() {
     if (typeof window === "undefined") return "bg3";
     return new URLSearchParams(window.location.search).get("room") || "bg3";
   }, []);
+
+  const week = useMemo(() => getWeekRangeMonSun(new Date()), []);
+  const weekLabel = `${formatCZ(week.start)} – ${formatCZ(week.end)}`;
 
   // load z DB
   useEffect(() => {
@@ -224,8 +248,8 @@ return (
         <div className="bg3-cardHeader">
           <div className="bg3-titleRow">
             <h1 className="bg3-h1">Baldur's Gate Guild Schedule</h1>
-            <span className="bg3-sub">
-              Room: <b>{roomSlug}</b> • Stav: <b>{status}</b>
+            <span className="bg3-headText">
+              Týden: <b>{weekLabel}</b> • Room: <b>{roomSlug}</b> • Stav: <b>{status}</b>
             </span>
           </div>
 
