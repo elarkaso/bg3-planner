@@ -97,7 +97,21 @@ a{ color: var(--gold2); }
   color: var(--text);
   font-size: 13px;
 }
+.bg3-event{
+  box-shadow:
+    inset 0 0 0 2px rgba(214,178,94,.65),
+    inset 0 0 18px rgba(214,178,94,.18);
+  position: relative;
+}
 
+.bg3-event::after{
+  content: "⚔️";
+  position: absolute;
+  right: 6px;
+  top: 4px;
+  font-size: 12px;
+  opacity: .85;
+}
 .bg3-controls{
   margin-top: 10px;
   display:flex;

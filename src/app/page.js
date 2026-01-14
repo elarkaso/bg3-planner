@@ -290,6 +290,10 @@ export default function Page() {
   }
 
     // společné volno (minFree)
+    const eventsForWeek = useMemo(() => {
+      return data.events?.[selectedWeekKey] ?? [];
+        }, [data, selectedWeekKey]);
+
     const blocks = useMemo(() => {
     const players = data.players ?? [];
     const blocksOut = [];
@@ -463,13 +467,21 @@ return (
                     const state = cell.state ?? "empty";
                     const note = (cell.note ?? "").trim();
 
+                    const hourStart = HOURS[h]; // např. 20
+                    const hasEvent = eventsForWeek.some(e =>
+                      e.day === d &&
+                      hourStart >= e.startHour &&
+                      hourStart < e.endHour
+                    );
+
                     return (
                       <td
                         key={`${selectedWeekKey}-${d}-${h}`}
                         className={[
                           "bg3-td",
                           `bg3-state-${state}`,
-                          note ? "bg3-hasNote" : ""
+                          note ? "bg3-hasNote" : "",
+                          hasEvent ? "bg3-hasEvent" : ""
                         ].join(" ")}
                       >
                         <div className="bg3-cell">
@@ -538,6 +550,32 @@ return (
         </div>
 
         <div className="bg3-sideBody">
+
+        {eventsForWeek.length > 0 && (
+          <div className="bg3-slot" style={{ marginBottom: 14 }}>
+            <div className="bg3-slotTop">
+              <b>Eventy z Discordu</b>
+              <small>{eventsForWeek.length}</small>
+            </div>
+
+            <div style={{ marginTop: 8, fontSize: 13 }}>
+              {eventsForWeek
+                .slice()
+                .sort((a, b) => (a.day - b.day) || (a.startHour - b.startHour))
+                .map(e => (
+                  <div key={e.id} style={{ marginTop: 6 }}>
+                    <span className="bg3-dot free"></span>
+                    <b>{e.title}</b>
+                    <div className="bg3-sub" style={{ marginTop: 2 }}>
+                      {DAYS[e.day]} {pad2(e.startHour)}:00–{pad2(e.endHour)}:00
+                      {e.createdBy ? ` • ${e.createdBy}` : ""}
+                    </div>
+                  </div>
+                ))}
+            </div>
+          </div>
+        )}
+
           {blocks.length === 0 ? (
           <div className="bg3-sub">Nic nesplňuje podmínku. Zkus snížit „Min. free“.</div>
         ) : (
