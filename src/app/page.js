@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { loadRoom, saveRoom } from "@/lib/rooms";
 
-export default function Page() {
+export default function LoginPageRouter() {
   const router = useRouter(); // ✅ TADY, uvnitř komponenty
 
   useEffect(() => {
