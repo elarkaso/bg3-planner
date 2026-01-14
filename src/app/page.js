@@ -30,6 +30,30 @@ function getWeekRangeMonSun(today = new Date()) {
   return { start: monday, end: sunday };
 }
 
+function getMonday(date = new Date()) {
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  const day = d.getDay(); // 0=Ne
+  const diffToMon = day === 0 ? -6 : 1 - day;
+  d.setDate(d.getDate() + diffToMon);
+  return d;
+}
+
+function addDays(date, n) {
+  const d = new Date(date);
+  d.setDate(d.getDate() + n);
+  return d;
+}
+
+function toISODate(date) {
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
 function uid() {
   return Math.random().toString(16).slice(2) + Date.now().toString(16);
 }
@@ -41,7 +65,18 @@ function blankMatrix() {
 }
 function seed() {
   const p1 = { id: uid(), name: "Já" };
-  return { players: [p1], availability: { [p1.id]: blankMatrix() } };
+
+  const monday = getMonday(new Date());
+  const weekKey = toISODate(monday);
+
+  return {
+    players: [p1],
+    weeks: {
+      [weekKey]: {
+        availability: { [p1.id]: blankMatrix() },
+      },
+    },
+  };
 }
 
 function deepClone(obj) {
@@ -67,14 +102,51 @@ export default function Page() {
   const week = useMemo(() => getWeekRangeMonSun(new Date()), []);
   const weekLabel = `${formatCZ(week.start)} – ${formatCZ(week.end)}`;
 
+  const thisMonday = useMemo(() => getMonday(new Date()), []);
+  const nextMonday = useMemo(() => addDays(thisMonday, 7), [thisMonday]);
+
+  const thisWeekKey = useMemo(() => toISODate(thisMonday), [thisMonday]);
+  const nextWeekKey = useMemo(() => toISODate(nextMonday), [nextMonday]);
+
+  const nextWeek = useMemo(() => getWeekRangeMonSun(nextMonday), [nextMonday]);
+  const nextWeekLabel = `${formatCZ(nextWeek.start)} – ${formatCZ(nextWeek.end)}`;
+
+  const [selectedWeekKey, setSelectedWeekKey] = useState(thisWeekKey);
+
+  const selectedWeekLabel =
+  selectedWeekKey === thisWeekKey ? weekLabel :
+  selectedWeekKey === nextWeekKey ? nextWeekLabel :
+  selectedWeekKey;
+
+  function ensureWeeksShape(loaded) {
+  if (loaded?.weeks) return loaded;
+
+  // starý tvar: { players, availability }
+  const monday = getMonday(new Date());
+  const wk = toISODate(monday);
+
+    return {
+      players: loaded?.players ?? [],
+      weeks: {
+        [wk]: { availability: loaded?.availability ?? {} },
+      },
+    };
+  }
+
   // load z DB
   useEffect(() => {
     (async () => {
       try {
         setStatus("Načítám room…");
         const dbData = await loadRoom(roomSlug, seedData);
-        setData(dbData);
+        const upgraded = ensureWeeksShape(dbData);
+        setData(upgraded);
 
+        const withWeeks = deepClone(upgraded);
+        ensureWeek(withWeeks, thisWeekKey);
+        ensureWeek(withWeeks, nextWeekKey);
+        setData(withWeeks);
+              
         const first = dbData.players?.[0]?.id ?? seedData.players[0].id;
         setActivePlayerId(first);
         setMinFree(Math.max(1, dbData.players?.length ?? 1));
@@ -105,18 +177,39 @@ export default function Page() {
   }
 
   // helpers na práci s cell
-  function getCell(d, h) {
-    const pid = activePlayerId;
-    if (!pid) return { state: "empty", note: "" };
-    return data.availability?.[pid]?.[d]?.[h] ?? { state: "empty", note: "" };
+  function ensureWeek(nextData, weekKey) {
+  if (!nextData.weeks) nextData.weeks = {};
+  if (!nextData.weeks[weekKey]) nextData.weeks[weekKey] = { availability: {} };
+
+    for (const p of nextData.players ?? []) {
+      if (!nextData.weeks[weekKey].availability[p.id]) {
+        nextData.weeks[weekKey].availability[p.id] = blankMatrix();
+      }
+    }
   }
 
-  function cycleCell(d, h) {
+  function getCellForWeek(weekKey, d, h, playerId = activePlayerId) {
+    if (!playerId) return { state: "empty", note: "" };
+    return (
+      data.weeks?.[weekKey]?.availability?.[playerId]?.[d]?.[h] ?? {
+        state: "empty",
+        note: "",
+      }
+    );
+  }
+
+  function getCell(weekKey, d, h) {
+    return getCellForWeek(weekKey, d, h);
+  }
+
+  function cycleCell(weekKey, d, h) {
     const next = deepClone(data);
+    ensureWeek(next, weekKey);
+
     const pid = activePlayerId;
     if (!pid) return;
 
-    const cell = next.availability[pid][d][h];
+    const cell = next.weeks[weekKey].availability[pid][d][h];
     const cur = cell.state ?? "empty";
     const nextState = STATES[(STATES.indexOf(cur) + 1) % STATES.length];
     cell.state = nextState;
@@ -124,21 +217,24 @@ export default function Page() {
     persist(next);
   }
 
-  function editNote(d, h) {
+  function editNote(weekKey, d, h) {
     const pid = activePlayerId;
     if (!pid) return;
 
-    const current = getCell(d, h)?.note || "";
+    const current = getCellForWeek(weekKey, d, h)?.note || "";
     const playerName = data.players.find((p) => p.id === pid)?.name ?? "?";
-    const label = `${playerName} • ${DAYS[d]} • ${pad2(HOURS[h])}:00`;
+    const label = `${playerName} • ${weekKey} • ${DAYS[d]} • ${pad2(HOURS[h])}:00`;
 
     const note = window.prompt(`Poznámka (${label})`, current);
-    if (note === null) return; // cancel
+    if (note === null) return;
 
     const next = deepClone(data);
-    next.availability[pid][d][h].note = note.trim();
+    ensureWeek(next, weekKey);
+    next.weeks[weekKey].availability[pid][d][h].note = note.trim();
+
     persist(next);
   }
+
 
   function addPlayer() {
     const name = window.prompt("Jméno hráče:");
@@ -147,7 +243,11 @@ export default function Page() {
     const next = deepClone(data);
     const id = uid();
     next.players.push({ id, name: name.trim() });
-    next.availability[id] = blankMatrix();
+    // přidat hráče do všech existujících týdnů
+      for (const wk of Object.keys(next.weeks ?? {})) {
+        if (!next.weeks[wk].availability) next.weeks[wk].availability = {};
+        next.weeks[wk].availability[id] = blankMatrix();
+      }
 
     persist(next);
     setActivePlayerId(id);
@@ -165,7 +265,9 @@ export default function Page() {
 
     const next = deepClone(data);
     next.players = next.players.filter((x) => x.id !== pid);
-    delete next.availability[pid];
+      for (const wk of Object.keys(next.weeks ?? {})) {
+        delete next.weeks[wk].availability?.[pid];
+        }
 
     const newActive = next.players[0]?.id ?? null;
     persist(next);
@@ -178,9 +280,12 @@ export default function Page() {
     if (!ok) return;
 
     const next = deepClone(data);
-    next.players.forEach((p) => {
-      next.availability[p.id] = blankMatrix();
-    });
+      for (const wk of Object.keys(next.weeks ?? {})) {
+        next.players.forEach((p) => {
+          next.weeks[wk].availability[p.id] = blankMatrix();
+        });
+      }
+
     persist(next);
   }
 
@@ -191,7 +296,7 @@ export default function Page() {
 
     function statesAt(d, h) {
       return players.map(p => {
-        const cell = data.availability?.[p.id]?.[d]?.[h] ?? { state: "empty" };
+        const cell = data.weeks?.[selectedWeekKey]?.availability?.[p.id]?.[d]?.[h] ?? { state: "empty" };
         return { name: p.name, state: cell.state };
       });
     }
@@ -267,7 +372,7 @@ export default function Page() {
       for (let h = 0; h < HOURS.length; h++) {
         let ok = true;
         for (const p of players) {
-          const cell = data.availability?.[p.id]?.[d]?.[h] ?? { state: "empty" };
+          const cell = data.weeks?.[selectedWeekKey]?.availability?.[p.id]?.[d]?.[h] ?? { state: "empty" };
           if (cell.state !== "free") {
             ok = false;
             break;
@@ -286,12 +391,12 @@ return (
 
       {/* LEVÁ KARTA */}
       <section className="bg3-card">
-        {/* HEADER (tady se ztrácíš) */}
+        {/* HEADER */}
         <div className="bg3-cardHeader">
           <div className="bg3-titleRow">
             <h1 className="bg3-h1">Baldur's Gate Guild Schedule</h1>
             <span className="bg3-headText">
-              Týden: <b>{weekLabel}</b> • Room: <b>{roomSlug}</b> • Stav: <b>{status}</b>
+              Týden: <b>{selectedWeekLabel}</b> • Room: <b>{roomSlug}</b> • Stav: <b>{status}</b>
             </span>
           </div>
 
@@ -354,13 +459,13 @@ return (
                   <td className="bg3-td bg3-time">{pad2(hour)}:00</td>
 
                   {DAYS.map((_, d) => {
-                    const cell = getCell(d, h);
+                    const cell = getCell(selectedWeekKey, d, h);
                     const state = cell.state ?? "empty";
                     const note = (cell.note ?? "").trim();
 
                     return (
                       <td
-                        key={`${d}-${h}`}
+                        key={`${selectedWeekKey}-${d}-${h}`}
                         className={[
                           "bg3-td",
                           `bg3-state-${state}`,
@@ -368,12 +473,12 @@ return (
                         ].join(" ")}
                       >
                         <div className="bg3-cell">
-                          <button className="bg3-cellMain" onClick={() => cycleCell(d, h)}>
+                          <button className="bg3-cellMain" onClick={() => cycleCell(selectedWeekKey, d, h)}>
                             {STATE_LABEL[state]}
                           </button>
                           <button
                             className="bg3-noteBtn"
-                            onClick={() => editNote(d, h)}
+                            onClick={() => editNote(selectedWeekKey, d, h)}
                             title={note || "Přidat důvod"}
                           >
                             ✎
@@ -413,6 +518,19 @@ return (
               </select>
             </label>
 
+            <label className="bg3-sub">
+              Týden:&nbsp;
+              <select
+                className="bg3-select"
+                value={selectedWeekKey}
+                onChange={(e) => setSelectedWeekKey(e.target.value)}
+              >
+                <option value={thisWeekKey}>Tento ({thisWeekKey})</option>
+                <option value={nextWeekKey}>Příští ({nextWeekKey})</option>
+              </select>
+            </label>
+
+
             <button className="bg3-btn bg3-btnDanger" onClick={resetAll}>
               Reset vše
             </button>
@@ -425,7 +543,7 @@ return (
         ) : (
           blocks.map((b) => {
             const timeLabel = `${b.day} ${pad2(b.start)}:00–${pad2(b.end)}:00`;
-            const perfect = b.freeAllCount === (data.players?.length ?? 0);
+            const perfect = b.freeAll.length === (data.players?.length ?? 0);
 
             return (
               <div className="bg3-slot" style={perfect ? { borderColor: "var(--gold)" } : undefined}>
