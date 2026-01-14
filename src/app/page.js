@@ -189,70 +189,74 @@ export default function Page() {
     const players = data.players ?? [];
     const blocksOut = [];
 
-    // pomocné: free jména pro konkrétní (d,h)
-    function freeNamesAt(d, h) {
-      const free = [];
-      for (const p of players) {
+    function statesAt(d, h) {
+      return players.map(p => {
         const cell = data.availability?.[p.id]?.[d]?.[h] ?? { state: "empty" };
-        if (cell.state === "free") free.push(p.name);
-      }
-      return free;
+        return { name: p.name, state: cell.state };
+      });
     }
 
-    // průchod po dnech
     for (let d = 0; d < DAYS.length; d++) {
       let h = 0;
 
       while (h < HOURS.length) {
-        const free0 = freeNamesAt(d, h);
-
-        // podmínka: v této hodině je splněno minFree
-        if (free0.length < minFree) {
+        const hour0 = statesAt(d, h);
+        const availableCount0 = hour0.filter(x => x.state === "free" || x.state === "maybe").length;
+        if (availableCount0 < minFree) {
           h++;
           continue;
         }
 
-        // start bloku
         const startH = h;
         let endH = h + 1;
 
-        // průnik hráčů free po celý blok
-        let intersection = new Set(free0);
+        // pro každý hráč: množina stavů napříč blokem
+        const stateMap = new Map();
+        players.forEach(p => stateMap.set(p.name, new Set()));
 
-        // extend bloku, dokud navazuje a pořád splňuje minFree
+        hour0.forEach(x => stateMap.get(x.name).add(x.state));
+
         while (endH < HOURS.length) {
-          const freeNext = freeNamesAt(d, endH);
+          const hourNext = statesAt(d, endH);
+          const availableCountNext = hourNext.filter(x => x.state === "free" || x.state === "maybe").length;
+          if (availableCountNext < minFree) break;
 
-          if (freeNext.length < minFree) break;
-
-          // intersect
-          const nextSet = new Set(freeNext);
-          intersection = new Set([...intersection].filter((x) => nextSet.has(x)));
-
+          hourNext.forEach(x => stateMap.get(x.name).add(x.state));
           endH++;
         }
 
-        // převeď průnik do pole
-        const freeAllBlock = [...intersection];
+        // vyhodnocení hráčů
+        const freeAll = [];
+        const freeSome = [];
+        const never = [];
+
+        stateMap.forEach((states, name) => {
+          if (states.size === 1 && states.has("free")) {
+            freeAll.push(name);
+          } else if (states.has("free") || states.has("maybe")) {
+            freeSome.push(name);
+          } else {
+            never.push(name);
+          }
+        });
 
         blocksOut.push({
           key: `${d}-${startH}-${endH}`,
           day: DAYS[d],
-          d,
           start: HOURS[startH],
-          end: HOURS[endH - 1] + 1, // konec je +1 hodina
-          freeAllBlock,
-          // pro info (kolik je „po celý blok“)
-          freeAllCount: freeAllBlock.length,
+          end: HOURS[endH - 1] + 1,
+          freeAll,
+          freeSome,
+          never,
         });
 
-        // posuň se za blok
         h = endH;
       }
     }
 
     return blocksOut;
   }, [data, minFree]);
+
 
 
   const allFreeCount = useMemo(() => {
@@ -424,20 +428,26 @@ return (
             const perfect = b.freeAllCount === (data.players?.length ?? 0);
 
             return (
-              <div
-                key={b.key}
-                className="bg3-slot"
-                style={perfect ? { borderColor: "rgba(214,178,94,.55)" } : undefined}
-              >
+              <div className="bg3-slot" style={perfect ? { borderColor: "var(--gold)" } : undefined}>
                 <div className="bg3-slotTop">
-                  <b>{timeLabel}</b>
-                  <small>{b.freeAllCount}/{data.players?.length ?? 0} free (celý blok)</small>
+                  <b>{b.day} {pad2(b.start)}:00–{pad2(b.end)}:00</b>
+                  <small>{b.freeAll.length}/{data.players.length} jistě</small>
                 </div>
 
                 <div style={{ marginTop: 8, fontSize: 13 }}>
                   <div>
                     <span className="bg3-dot free"></span>
-                    <b>Mohou:</b> {b.freeAllBlock.join(", ") || "—"}
+                    <b>Mohou celý blok:</b> {b.freeAll.join(", ") || "—"}
+                  </div>
+
+                  <div style={{ marginTop: 6 }}>
+                    <span className="bg3-dot maybe"></span>
+                    <b>Mohou část:</b> {b.freeSome.join(", ") || "—"}
+                  </div>
+
+                  <div style={{ marginTop: 6 }}>
+                    <span className="bg3-dot busy"></span>
+                    <b>Nemohou:</b> {b.never.join(", ") || "—"}
                   </div>
                 </div>
               </div>
