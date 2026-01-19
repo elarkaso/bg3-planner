@@ -8,7 +8,7 @@ import { loadRoom, saveRoom } from "@/lib/rooms";
 const DAYS = ["Po", "Út", "St", "Čt", "Pá", "So", "Ne"];
 const HOURS = Array.from({ length: 16 }, (_, i) => i + 8); // 08:00–23:00
 
-const ACTS = ["Act I", "Act II", "Act III"];
+const ACTS = ["Wilderness", "Underdark", "Grymforge"];
 
 function defaultChecklist() {
   return {
