@@ -206,17 +206,25 @@ export default function Page() {
   }
 
   function ensureWeeksShape(loaded) {
-  if (loaded?.weeks) return loaded;
+    if (loaded?.weeks) {
+      // když chybí players, doplň seed
+      if (!Array.isArray(loaded.players) || loaded.players.length === 0) {
+        return { ...loaded, players: seedData.players };
+      }
+      return loaded;
+    }
 
-  // starý tvar: { players, availability }
-  const monday = getMonday(new Date());
-  const wk = toISODate(monday);
+    // starý tvar: { players, availability }
+    const monday = getMonday(new Date());
+    const wk = toISODate(monday);
 
     return {
-      players: loaded?.players ?? [],
+      players: (loaded?.players && loaded.players.length > 0) ? loaded.players : seedData.players,
       weeks: {
         [wk]: { availability: loaded?.availability ?? {} },
       },
+      checklist: loaded?.checklist ?? defaultChecklist(),
+      events: loaded?.events ?? {},
     };
   }
 
@@ -236,51 +244,52 @@ export default function Page() {
   useEffect(() => {
     (async () => {
       try {
-        setStatus("Načítám room…");
-        const dbData = await loadRoom(roomSlug, seedData);
-        const upgraded = ensureWeeksShape(dbData);
-        setData(upgraded);
+      setStatus("Načítám room…");
 
-        const upgraded2 = ensureChecklistShape(upgraded);
-        setData(upgraded2);
+      const dbData = await loadRoom(roomSlug, seedData);
 
-        const { data: { session } } = await supabase.auth.getSession();
-        const uid = session?.user?.id;
+      // 1) sjednotíme tvar + doplníme checklist
+      let nextData = ensureWeeksShape(dbData);
+      nextData = ensureChecklistShape(nextData);
 
-        // dopln owner, pokud chybí (legacy data)
-        if (uid) {
-          const fixed = deepClone(upgraded);
-          let changed = false;
+      // 2) doplníme týdny a matrix pro hráče
+      nextData = deepClone(nextData);
+      ensureWeek(nextData, thisWeekKey);
+      ensureWeek(nextData, nextWeekKey);
 
-          fixed.players = (fixed.players ?? []).map(p => {
-            if (!p.owner) { changed = true; return { ...p, owner: null }; }
-            return p;
-          });
+      // 3) owner migrace – ALE už nad nextData
+      const { data: { session } } = await supabase.auth.getSession();
+      const authUid = session?.user?.id;
 
-          // pokud žádný hráč ještě nemá owner a existuje hráč "Já", přiřaď ho aktuálnímu userovi
-          const hasAnyOwner = fixed.players.some(p => p.owner);
-          if (!hasAnyOwner && fixed.players.length > 0) {
-            fixed.players[0] = { ...fixed.players[0], owner: uid };
-            changed = true;
-          }
+      if (authUid) {
+        let changed = false;
 
-          if (changed) {
-            setData(fixed);
-            // volitelně persist(fixed) – ale až po inicializaci, aby ses nebil s loadem
-            await saveRoom(roomSlug, fixed);
-          }
+        nextData.players = (nextData.players ?? []).map(p => {
+          if (p.owner === undefined) { changed = true; return { ...p, owner: null }; }
+          return p;
+        });
+
+        const hasAnyOwner = (nextData.players ?? []).some(p => p.owner);
+        if (!hasAnyOwner && (nextData.players?.length ?? 0) > 0) {
+          nextData.players[0] = { ...nextData.players[0], owner: authUid };
+          changed = true;
         }
 
-        const withWeeks = deepClone(upgraded);
-        ensureWeek(withWeeks, thisWeekKey);
-        ensureWeek(withWeeks, nextWeekKey);
-        setData(withWeeks);
-              
-        const first = dbData.players?.[0]?.id ?? seedData.players[0].id;
-        setActivePlayerId(first);
-        setMinFree(Math.max(1, dbData.players?.length ?? 1));
+        if (changed) {
+          await saveRoom(roomSlug, nextData); // ✅ ukládáme kompletní objekt
+        }
+      }
 
-        setStatus("OK");
+      // 4) setData jen jednou
+      setData(nextData);
+
+      // 5) aktivní hráč
+      const first = nextData.players?.[0]?.id ?? seedData.players[0].id;
+      setActivePlayerId(first);
+      setMinFree(Math.max(1, nextData.players?.length ?? 1));
+
+      setStatus("OK");
+
       } catch (e) {
         console.error(e);
         setStatus("Chyba při načtení (viz konzole)");
