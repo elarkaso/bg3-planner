@@ -12,18 +12,34 @@ const ACTS = ["Act I", "Act II", "Act III"];
 
 function defaultChecklist() {
   return {
-    "Act I": [
-      { id: uid(), text: "Nautiloid – úvod", done: false },
+    "Wilderness": [
+      { id: uid(), text: "Nautiloid", done: false },
       { id: uid(), text: "Druid Grove", done: false },
       { id: uid(), text: "Goblin Camp", done: false },
+      { id: uid(), text: "Blighted Village", done: false },
+      { id: uid(), text: "Spider Matriarch", done: false },
+      { id: uid(), text: "Risen Road", done: false },
+      { id: uid(), text: "Flind Gnoll Boss", done: false },
+      { id: uid(), text: "Waukeen's rest", done: false },
+      { id: uid(), text: "Zhentarim Hideout", done: false },
+      { id: uid(), text: "Mountain Pass", done: false },
     ],
-    "Act II": [
-      { id: uid(), text: "Last Light Inn", done: false },
-      { id: uid(), text: "Moonrise Towers", done: false },
+    "Underdark": [
+      { id: uid(), text: "Myconid Colony", done: false },
+      { id: uid(), text: "Beach", done: false },
+      { id: uid(), text: "Festering Cove", done: false },
+      { id: uid(), text: "Arcane Tower", done: false },
+      { id: uid(), text: "Sussur Tree", done: false },
+      { id: uid(), text: "Spectator", done: false },
+      { id: uid(), text: "Bullette", done: false },
     ],
-    "Act III": [
-      { id: uid(), text: "Lower City – start", done: false },
-      { id: uid(), text: "Finále", done: false },
+    "Grymforge": [
+      { id: uid(), text: "Dwarf/Nere Fight", done: false },
+      { id: uid(), text: "Mithral ore 2x", done: false },
+      { id: uid(), text: "Mephit fight", done: false },
+      { id: uid(), text: "Lava elemental", done: false },
+      { id: uid(), text: "Adamantine Forge", done: false },
+      { id: uid(), text: "Grym Fight", done: false },
     ],
   };
 }
@@ -747,7 +763,7 @@ return (
         </div>
                   <div className="bg3-slot" style={{ marginBottom: 14 }}>
           <div className="bg3-slotTop">
-            <b>Checklist</b>
+            <b>ACT I - CHECKLIST</b>
             <button className="bg3-btn" style={{ padding: "4px 8px" }} onClick={resetChecklist}>
               Reset
             </button>
