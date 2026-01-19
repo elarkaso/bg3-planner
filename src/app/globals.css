@@ -416,3 +416,18 @@ a{ color: var(--gold2); }
   text-align: center;
   opacity: .85;
 }
+
+/* ===== BG3 Checklist ===== */
+.bg3-checklist { display: grid; gap: 12px; margin-top: 10px; }
+.bg3-act { padding: 10px; border-radius: 14px; border: 1px solid rgba(255,255,255,.10); background: rgba(255,255,255,.03); }
+.bg3-actHead { display:flex; align-items:center; justify-content:space-between; gap: 10px; margin-bottom: 8px; }
+.bg3-actList { display: grid; gap: 8px; }
+
+.bg3-item { display:flex; align-items:flex-start; gap: 10px; cursor:pointer; user-select:none; }
+.bg3-item input { margin-top: 2px; }
+.bg3-itemText { line-height: 1.2rem; color: rgba(255,255,255,.86); }
+
+.bg3-item.isDone .bg3-itemText {
+  text-decoration: line-through;
+  color: rgba(255,255,255,.45);
+}

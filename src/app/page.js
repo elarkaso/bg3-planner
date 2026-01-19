@@ -8,6 +8,26 @@ import { loadRoom, saveRoom } from "@/lib/rooms";
 const DAYS = ["Po", "Út", "St", "Čt", "Pá", "So", "Ne"];
 const HOURS = Array.from({ length: 16 }, (_, i) => i + 8); // 08:00–23:00
 
+const ACTS = ["Act I", "Act II", "Act III"];
+
+function defaultChecklist() {
+  return {
+    "Act I": [
+      { id: uid(), text: "Nautiloid – úvod", done: false },
+      { id: uid(), text: "Druid Grove", done: false },
+      { id: uid(), text: "Goblin Camp", done: false },
+    ],
+    "Act II": [
+      { id: uid(), text: "Last Light Inn", done: false },
+      { id: uid(), text: "Moonrise Towers", done: false },
+    ],
+    "Act III": [
+      { id: uid(), text: "Lower City – start", done: false },
+      { id: uid(), text: "Finále", done: false },
+    ],
+  };
+}
+
 const STATES = ["empty", "free", "maybe", "busy"];
 const STATE_LABEL = { empty: "—", free: "free", maybe: "možná", busy: "busy" };
 
@@ -78,6 +98,7 @@ function seed() {
         availability: { [p1.id]: blankMatrix() },
       },
     },
+    checklist: defaultChecklist(),
   };
 }
 
@@ -134,6 +155,40 @@ export default function Page() {
   selectedWeekKey === nextWeekKey ? nextWeekLabel :
   selectedWeekKey;
 
+  function toggleChecklistItem(act, itemId) {
+  const next = deepClone(data);
+  if (!next.checklist) next.checklist = defaultChecklist();
+  const list = next.checklist[act] ?? [];
+
+  const idx = list.findIndex((x) => x.id === itemId);
+  if (idx === -1) return;
+
+  list[idx].done = !list[idx].done;
+  next.checklist[act] = list;
+
+  persist(next);
+  }
+
+  function addChecklistItem(act) {
+    const text = window.prompt(`Nová položka (${act}):`);
+    if (!text || !text.trim()) return;
+
+    const next = deepClone(data);
+    if (!next.checklist) next.checklist = defaultChecklist();
+    if (!next.checklist[act]) next.checklist[act] = [];
+
+    next.checklist[act].push({ id: uid(), text: text.trim(), done: false });
+    persist(next);
+  }
+
+  function resetChecklist() {
+    const ok = window.confirm("Resetovat checklist (odškrtnutí i položky)?");
+    if (!ok) return;
+    const next = deepClone(data);
+    next.checklist = defaultChecklist();
+    persist(next);
+  }
+
   function ensureWeeksShape(loaded) {
   if (loaded?.weeks) return loaded;
 
@@ -149,6 +204,18 @@ export default function Page() {
     };
   }
 
+  function ensureChecklistShape(loaded) {
+  const out = loaded ? deepClone(loaded) : {};
+  if (!out.checklist) out.checklist = defaultChecklist();
+
+  // doplnit chybějící acty
+  for (const act of ACTS) {
+    if (!out.checklist[act]) out.checklist[act] = [];
+    }
+    return out;
+  }
+
+
   // load z DB
   useEffect(() => {
     (async () => {
@@ -157,6 +224,9 @@ export default function Page() {
         const dbData = await loadRoom(roomSlug, seedData);
         const upgraded = ensureWeeksShape(dbData);
         setData(upgraded);
+
+        const upgraded2 = ensureChecklistShape(upgraded);
+        setData(upgraded2);
 
         const { data: { session } } = await supabase.auth.getSession();
         const uid = session?.user?.id;
@@ -621,6 +691,59 @@ return (
               <b>Eventy z Discordu</b>
               <small>{eventsForWeek.length}</small>
             </div>
+          <div className="bg3-slot" style={{ marginBottom: 14 }}>
+          <div className="bg3-slotTop">
+            <b>Checklist</b>
+            <button className="bg3-btn" style={{ padding: "4px 8px" }} onClick={resetChecklist}>
+              Reset
+            </button>
+          </div>
+
+          <div className="bg3-checklist">
+            {ACTS.map((act) => {
+              const items = data.checklist?.[act] ?? [];
+              const doneCount = items.filter((x) => x.done).length;
+
+              return (
+                <div key={act} className="bg3-act">
+                  <div className="bg3-actHead">
+                    <div>
+                      <b>{act}</b>{" "}
+                      <span className="bg3-sub">
+                        ({doneCount}/{items.length})
+                      </span>
+                    </div>
+
+                    <button
+                      className="bg3-btn bg3-btnPrimary"
+                      style={{ padding: "4px 8px" }}
+                      onClick={() => addChecklistItem(act)}
+                    >
+                      + Přidat
+                    </button>
+                  </div>
+
+                  <div className="bg3-actList">
+                    {items.length === 0 ? (
+                      <div className="bg3-sub">Zatím nic. Přidej položku.</div>
+                    ) : (
+                      items.map((it) => (
+                        <label key={it.id} className={`bg3-item ${it.done ? "isDone" : ""}`}>
+                          <input
+                            type="checkbox"
+                            checked={!!it.done}
+                            onChange={() => toggleChecklistItem(act, it.id)}
+                          />
+                          <span className="bg3-itemText">{it.text}</span>
+                        </label>
+                      ))
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
 
             <div style={{ marginTop: 8, fontSize: 13 }}>
               {eventsForWeek
