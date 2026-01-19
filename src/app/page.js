@@ -691,59 +691,6 @@ return (
               <b>Eventy z Discordu</b>
               <small>{eventsForWeek.length}</small>
             </div>
-          <div className="bg3-slot" style={{ marginBottom: 14 }}>
-          <div className="bg3-slotTop">
-            <b>Checklist</b>
-            <button className="bg3-btn" style={{ padding: "4px 8px" }} onClick={resetChecklist}>
-              Reset
-            </button>
-          </div>
-
-          <div className="bg3-checklist">
-            {ACTS.map((act) => {
-              const items = data.checklist?.[act] ?? [];
-              const doneCount = items.filter((x) => x.done).length;
-
-              return (
-                <div key={act} className="bg3-act">
-                  <div className="bg3-actHead">
-                    <div>
-                      <b>{act}</b>{" "}
-                      <span className="bg3-sub">
-                        ({doneCount}/{items.length})
-                      </span>
-                    </div>
-
-                    <button
-                      className="bg3-btn bg3-btnPrimary"
-                      style={{ padding: "4px 8px" }}
-                      onClick={() => addChecklistItem(act)}
-                    >
-                      + Přidat
-                    </button>
-                  </div>
-
-                  <div className="bg3-actList">
-                    {items.length === 0 ? (
-                      <div className="bg3-sub">Zatím nic. Přidej položku.</div>
-                    ) : (
-                      items.map((it) => (
-                        <label key={it.id} className={`bg3-item ${it.done ? "isDone" : ""}`}>
-                          <input
-                            type="checkbox"
-                            checked={!!it.done}
-                            onChange={() => toggleChecklistItem(act, it.id)}
-                          />
-                          <span className="bg3-itemText">{it.text}</span>
-                        </label>
-                      ))
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
 
             <div style={{ marginTop: 8, fontSize: 13 }}>
               {eventsForWeek
@@ -797,6 +744,59 @@ return (
             );
           })
         )}
+        </div>
+                  <div className="bg3-slot" style={{ marginBottom: 14 }}>
+          <div className="bg3-slotTop">
+            <b>Checklist</b>
+            <button className="bg3-btn" style={{ padding: "4px 8px" }} onClick={resetChecklist}>
+              Reset
+            </button>
+          </div>
+
+          <div className="bg3-checklist">
+            {ACTS.map((act) => {
+              const items = data.checklist?.[act] ?? [];
+              const doneCount = items.filter((x) => x.done).length;
+
+              return (
+                <div key={act} className="bg3-act">
+                  <div className="bg3-actHead">
+                    <div>
+                      <b>{act}</b>{" "}
+                      <span className="bg3-sub">
+                        ({doneCount}/{items.length})
+                      </span>
+                    </div>
+
+                    <button
+                      className="bg3-btn bg3-btnPrimary"
+                      style={{ padding: "4px 8px" }}
+                      onClick={() => addChecklistItem(act)}
+                    >
+                      + Přidat
+                    </button>
+                  </div>
+
+                  <div className="bg3-actList">
+                    {items.length === 0 ? (
+                      <div className="bg3-sub">Zatím nic. Přidej položku.</div>
+                    ) : (
+                      items.map((it) => (
+                        <label key={it.id} className={`bg3-item ${it.done ? "isDone" : ""}`}>
+                          <input
+                            type="checkbox"
+                            checked={!!it.done}
+                            onChange={() => toggleChecklistItem(act, it.id)}
+                          />
+                          <span className="bg3-itemText">{it.text}</span>
+                        </label>
+                      ))
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </aside>
 
